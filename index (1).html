@@ -1433,6 +1433,12 @@ body.kbup .modal.throw .th-sub{display:none}
   font-size:10px;color:var(--ink2);min-height:40px}
 .npdone{display:block;width:100%;margin-top:7px;background:var(--accent);color:var(--accent-ink);
   border:none;font-family:var(--disp);font-size:14px;letter-spacing:.18em;font-weight:600;min-height:48px}
+
+.syncbox{display:flex;align-items:center;justify-content:space-between;gap:9px;width:100%;
+  margin:12px 0 10px;padding:10px 0;border-top:1px dotted #4A4A40;border-bottom:1px dotted #4A4A40}
+.syncl{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:#8C8878;text-transform:uppercase}
+.syncl span{display:block;color:#C9C4B4;letter-spacing:.1em;font-size:8.5px;margin-top:3px;text-transform:none}
+.syncr{display:flex;gap:6px;flex:none}
 </style>
 </head>
 <body>
@@ -1457,6 +1463,13 @@ body.kbup .modal.throw .th-sub{display:none}
     <div class="acc-row">
       <span class="acc-lab">Accent</span>
       <span id="swatches"></span>
+    </div>
+    <div class="syncbox">
+      <div class="syncl">SYNC <span id="syncState">Off</span></div>
+      <div class="syncr">
+        <button class="btn" data-act="syncnow">SYNC NOW</button>
+        <button class="btn" id="syncSetupBtn" data-act="syncsetup">SET UP</button>
+      </div>
     </div>
     <button class="btn" data-act="export">Export backup</button>
     <button class="btn" data-act="import">Import</button>
@@ -1592,6 +1605,7 @@ function addState(){
   S.states = live.concat(
     [{ id, label, sub:String(sub).trim().slice(0,26), hex:STATE_PALETTE[live.length % STATE_PALETTE.length], w:10 }],
     S.states.filter(x => x.id === "done"));
+  stamp("states", id);
   return id;
 }
 function editState(id){
@@ -1601,7 +1615,7 @@ function editState(id){
   if(t === null) return;
   const label = String(t).trim().slice(0,14).toUpperCase();
   if(label){
-    st.label = label;
+    st.label = label; stamp("states", st.id);
     const sub = window.prompt("One line under it \u2014 optional", st.sub || "");
     if(sub !== null) st.sub = String(sub).trim().slice(0,26);
     render(); return;
@@ -1612,6 +1626,7 @@ function editState(id){
       live.find(x => x.id !== id).label + '.')) return;
   const fallback = live.find(x => x.id !== id).id;
   S.notes.forEach(n => { if(n.status === id) n.status = fallback; });
+  bury("states", id);
   S.states = S.states.filter(x => x.id !== id);
   render();
 }
@@ -1644,6 +1659,7 @@ function addCat(){
   if(found) return found.id;
   const id = uid("c");
   S.cats.push({ id, label, hex:CAT_PALETTE[S.cats.length % CAT_PALETTE.length] });
+  stamp("cats", id);
   return id;
 }
 function editCat(id){
@@ -1651,11 +1667,12 @@ function editCat(id){
   const t = window.prompt('Rename "' + c.label + '" \u2014 or clear it to delete', c.label);
   if(t === null) return;
   const label = String(t).trim().slice(0,12).toUpperCase();
-  if(label){ c.label = label; render(); return; }
+  if(label){ c.label = label; stamp("cats", c.id); render(); return; }
   if(S.cats.length <= 1){ toast("Keep at least one section."); return; }
   if(!window.confirm('Delete "' + c.label + '"? Its notes move to the first section.')) return;
   const fallback = S.cats.find(x => x.id !== id).id;
   S.notes.forEach(n => { if(n.cat === id) n.cat = fallback; });
+  bury("cats", id);
   S.cats = S.cats.filter(x => x.id !== id);
   render();
 }
@@ -1689,6 +1706,7 @@ const S = {
   cats: [],                // life sections — yours to rename, add and drop
   states: [],              // what a note is — also yours
   wallName: "Your Wall",   // what you call it
+  sync: { url:"", key:"", at:0 }, mt: {}, tomb: {}, syncing: false, syncFp: "", syncWrites: 0,
   doneSort: "last",        // finished things sink by default
   groupBy: "state",        // the notes list groups by state or by life section
   wheelOpen: false,
@@ -2215,6 +2233,7 @@ function growEdit(el){
   el.style.height = "auto";
   el.style.height = Math.max(44, el.scrollHeight) + "px";
 }
+function stampNoteEdit(id){ stamp("notes", id); }
 function saveNoteText(id, val){
   const n = S.notes.find(x => x.id === id);
   if(n){ const t = (val||"").trim(); if(t && t !== n.text){
@@ -2457,7 +2476,7 @@ function parseWhen(text){
   if(time && !due) due = isoPlus(0);
   return { due, time };
 }
-function touchNote(n){ if(n) n.touched = todayStamp(); }
+function touchNote(n){ if(n){ n.touched = todayStamp(); stamp("notes", n.id); } }
 function staleness(n){ return daysSince(n.touched || n.date); }
 function staleOnes(){
   return S.notes.filter(n => n.status === "priority" && staleness(n) >= 14)
@@ -2926,6 +2945,7 @@ const didIt    = (iso, id) => { const h = habitBy(id); return !!h && hval(iso, i
 function isoShift(iso, n){ const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0,10); }
 function seedHabits(){ if(!S.habits.length) S.habits = DEFAULT_HABITS.map(h => Object.assign({}, h)); }
 function setHab(iso, id, v){
+  stamp("day", iso);
   if(v > 0){ if(!S.day[iso]) S.day[iso] = {}; S.day[iso][id] = Math.min(999999, v); }
   else if(S.day[iso]){ delete S.day[iso][id]; if(!Object.keys(S.day[iso]).length) delete S.day[iso]; }
 }
@@ -3038,14 +3058,16 @@ function chalRestart(id){
 function chalDrop(id){
   const c = S.chals.find(x => x.id === id); if(!c) return;
   if(!window.confirm('Drop "' + c.name + '"? Your daily marks stay.')) return;
-  S.chals = S.chals.filter(x => x.id !== id); render();
+  bury("chals", id); S.chals = S.chals.filter(x => x.id !== id); render();
 }
 function makeChal(name, ids, days, need){
   const live = ids.filter(id => habitBy(id));
   if(!live.length) return false;
   const mode = live.every(id => habitBy(id).kind === "slip") ? "avoid" : "do";
-  S.chals.push({ id:uid("c"), name:name, habits:live, mode:mode,
+  const cid = uid("c");
+  S.chals.push({ id:cid, name:name, habits:live, mode:mode,
                  days:days, need:Math.min(days, Math.max(1, need)), start:todayStamp() });
+  stamp("chals", cid);
   return true;
 }
 function useTemplate(key){
@@ -3090,11 +3112,13 @@ function saveHabit(){
                 goal:d.mode === "check" ? 0 : d.goal };
   const i = S.habits.findIndex(x => x.id === rec.id);
   if(i >= 0) S.habits[i] = rec; else S.habits.push(rec);
+  stamp("habits", rec.id);
   S.draft = null; S.dayPane = "list"; render();
 }
 function deleteHabit(){
   const d = S.draft; if(!d) return;
   if(!window.confirm('Remove "' + (d.label || "this") + '"? Its history goes too.')) return;
+  bury("habits", d.id);
   S.habits = S.habits.filter(x => x.id !== d.id);
   S.chals = S.chals.filter(c => { c.habits = c.habits.filter(id => id !== d.id); return c.habits.length; });
   Object.keys(S.day).forEach(k => { delete S.day[k][d.id]; if(!Object.keys(S.day[k]).length) delete S.day[k]; });
@@ -3307,15 +3331,17 @@ function addEvent(part){
   if(!text) return;
   const iso = dayCur();
   (S.events[iso] ||= []).push({ id:uid("v"), part:part, text:text, done:false });
+  stamp("events", iso);
   S.addPart = null; render();
 }
 function toggleEvent(id){
   const list = S.events[dayCur()] || [];
   const e = list.find(x => x.id === id); if(!e) return;
-  e.done = !e.done; render();
+  e.done = !e.done; stamp("events", dayCur()); render();
 }
 function dropEvent(id){
   const iso = dayCur();
+  stamp("events", iso);
   S.events[iso] = (S.events[iso] || []).filter(x => x.id !== id);
   if(!S.events[iso].length) delete S.events[iso];
   render();
@@ -3327,7 +3353,7 @@ function renamePart(id){
   const t = window.prompt('Rename "' + p.label + '" \u2014 or clear it to remove the stretch', p.label);
   if(t === null) return;
   const label = String(t).trim().slice(0,16);
-  if(label){ p.label = label; render(); return; }
+  if(label){ p.label = label; stamp("parts", p.id); render(); return; }
   if(partList().length <= 1){ toast("Keep at least one stretch."); return; }
   if(habitsIn(id).length && !window.confirm("Its things move to ANY TIME. Remove it?")) return;
   S.habits.forEach(h => { if(h.part === id) h.part = "any"; });
@@ -3335,6 +3361,7 @@ function renamePart(id){
   const i = partList().findIndex(x => x.id === id);
   const prev = partList()[i-1], next = partList()[i+1];
   if(prev && next) prev.to = next.from; else if(prev) prev.to = 29; else if(next) next.from = 5;
+  bury("parts", id);
   S.parts = partList().filter(x => x.id !== id);
   render();
 }
@@ -3348,6 +3375,7 @@ function addPart(){
   const np = { id:uid("p"), label, from:cut, to:last.to };
   last.to = cut;
   S.parts = arr.concat([np]);
+  stamp("parts", np.id);
   render();
 }
 Object.defineProperty(window, "PART_IDS", { get: () => partList().map(p => p.id) });
@@ -3413,12 +3441,14 @@ function logOf(iso){ return S.log[iso] || []; }
 function sumOf(d, f){ return d.reduce((a,e)=>a+(+e[f]||0), 0); }
 function addEntry(e){
   const iso = dayCur();
+  stamp("log", iso);
   if(!S.log[iso]) S.log[iso] = [];
   S.log[iso].push(Object.assign({ id:uid("e"),
     ts:Date.now(), kind:"note", text:"", oz:0, min:0, protein:0, produce:0, liquid:0, block:null }, e));
 }
 function dropEntry(id){
   const iso = dayCur();
+  stamp("log", iso);
   S.log[iso] = logOf(iso).filter(e => e.id !== id);
   if(!S.log[iso].length) delete S.log[iso];
   render();
@@ -3743,11 +3773,13 @@ function uid(prefix){
 function addWin(text, big){
   const t = String(text || "").trim().slice(0,120);
   if(!t) return false;
-  S.wins.push({ id:uid("w"), ts:Date.now(), text:t, big:!!big });
+  const w = { id:uid("w"), ts:Date.now(), text:t, big:!!big };
+  S.wins.push(w); stamp("wins", w.id);
   return true;
 }
 function dropWin(id){
   if(!window.confirm("Take that one off the wall?")) return;
+  bury("wins", id);
   S.wins = S.wins.filter(w => w.id !== id);
   render();
 }
@@ -3814,6 +3846,164 @@ function commitWin(){
   if(addWin(el.value)){ el.value = ""; toast("On the wall."); render();
     const again = $("#winIn"); if(again) again.focus();
   } else { toast("Write it first."); }
+}
+
+
+/* =================================================================
+   SYNC — one JSON mailbox, no account. The device stays the source
+   of truth; the mailbox just carries changes between devices.
+   Everything goes through syncNow(); swap the transport and the
+   merge below is untouched.
+   S.sync { url, key, last, at, on }
+   S.mt   { "notes:id": ts }   when each thing last changed here
+   S.tomb { "notes:id": ts }   when each thing was deleted here
+   ================================================================= */
+const SYNC_KEYS = ["notes","wins","habits","cats","states","parts","chals"];
+function stamp(kind, id){ S.mt[kind + ":" + id] = Date.now(); }
+function bury(kind, id){
+  const k = kind + ":" + id;
+  S.tomb[k] = Date.now();
+  delete S.mt[k];
+}
+function mtOf(kind, id){ return +S.mt[kind + ":" + id] || 0; }
+function tombOf(kind, id){ return +S.tomb[kind + ":" + id] || 0; }
+
+/* every list merges the same way: keep both sides, newest edit wins,
+   a delete only sticks if it happened after the other side's edit */
+function mergeList(mine, theirs, myMt, myTomb, theirMt, theirTomb, kind){
+  const out = new Map();
+  mine.forEach(x => out.set(x.id, x));
+  theirs.forEach(x => {
+    const id = x.id;
+    const tm = +theirMt[kind + ":" + id] || 0, td = +theirTomb[kind + ":" + id] || 0;
+    const mm = +myMt[kind + ":" + id] || 0,   md = +myTomb[kind + ":" + id] || 0;
+    if(md && md > tm && md > td) return;            /* I deleted it, more recently */
+    if(td && td > mm){ out.delete(id); return; }    /* they deleted it, more recently */
+    if(!out.has(id) || tm > mm) out.set(id, x);     /* theirs is newer, or new to me */
+  });
+  /* their deletions have to be applied to things only I still hold — walking
+     their list alone would let a deleted item live on here forever */
+  Object.keys(theirTomb || {}).forEach(k => {
+    if(k.indexOf(kind + ":") !== 0) return;
+    const id = k.slice(kind.length + 1);
+    const td = +theirTomb[k] || 0, mm = +myMt[k] || 0;
+    if(td > mm) out.delete(id);
+  });
+  return [...out.values()];
+}
+/* date-keyed maps (taps, food log, one-off events) merge a day at a time */
+function mergeByDay(mine, theirs, myMt, theirMt, kind){
+  const out = Object.assign({}, mine);
+  Object.keys(theirs || {}).forEach(d => {
+    const tm = +theirMt[kind + ":" + d] || 0, mm = +myMt[kind + ":" + d] || 0;
+    if(!(d in out) || tm > mm) out[d] = theirs[d];
+  });
+  return out;
+}
+function mergeState(theirs){
+  if(!theirs || typeof theirs !== "object") return false;
+  const tMt = theirs.mt || {}, tTomb = theirs.tomb || {};
+  SYNC_KEYS.forEach(k => {
+    if(!Array.isArray(theirs[k])) return;
+    S[k] = mergeList(S[k] || [], theirs[k], S.mt, S.tomb, tMt, tTomb, k);
+  });
+  S.day    = mergeByDay(S.day,    theirs.day,    S.mt, tMt, "day");
+  S.log    = mergeByDay(S.log,    theirs.log,    S.mt, tMt, "log");
+  S.events = mergeByDay(S.events, theirs.events, S.mt, tMt, "events");
+  if(theirs.lift && typeof theirs.lift === "object"){
+    ["done","sets","wt","up"].forEach(sub => {
+      S.lift[sub] = Object.assign({}, S.lift[sub], theirs.lift[sub] || {});
+    });
+  }
+  /* plain settings: whichever device touched them last */
+  const tSet = +tMt["settings"] || 0, mSet = +S.mt["settings"] || 0;
+  if(tSet > mSet){
+    ["wallName","accent","groupBy","doneSort"].forEach(k => {
+      if(theirs[k] !== undefined) S[k] = theirs[k];
+    });
+    S.mt["settings"] = tSet;
+  }
+  S.mt   = Object.assign({}, tMt, S.mt);
+  S.tomb = Object.assign({}, tTomb, S.tomb);
+  return true;
+}
+function syncPayload(){
+  const p = snapshot();
+  p.mt = S.mt; p.tomb = S.tomb; p.rev = Date.now();
+  return p;
+}
+function stableStr(v){
+  /* key order changes every merge, so sort it or the fingerprint is noise */
+  if(v === null || typeof v !== "object") return JSON.stringify(v);
+  if(Array.isArray(v)) return "[" + v.map(stableStr).join(",") + "]";
+  return "{" + Object.keys(v).sort().map(k => JSON.stringify(k) + ":" + stableStr(v[k])).join(",") + "}";
+}
+function syncFingerprint(p){
+  const c = Object.assign({}, p);
+  /* volatile by nature: a save stamp and the sync clock change every call
+     and would make every idle sync look like a change */
+  delete c.rev; delete c.sync; delete c.saved;
+  const str = stableStr(c);
+  let h = 5381;
+  for(let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+  return str.length + ":" + h.toString(36);
+}
+async function syncNow(quiet){
+  const cfg = S.sync || {};
+  if(!cfg.url || !cfg.key){ if(!quiet) toast("Set up sync first."); return false; }
+  if(S.syncing) return false;
+  S.syncing = true; if(!quiet) paintSync("Syncing\u2026");
+  try {
+    const get = await fetch(cfg.url + "?key=" + encodeURIComponent(cfg.key), { cache:"no-store" });
+    if(get.ok){
+      const text = await get.text();
+      if(text && text.trim()){ try { mergeState(JSON.parse(text)); } catch(e){} }
+    }
+    const payload = syncPayload();
+    const fp = syncFingerprint(payload);
+    if(fp !== S.syncFp){
+      const put = await fetch(cfg.url + "?key=" + encodeURIComponent(cfg.key), {
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+      if(!put.ok) throw new Error("put " + put.status);
+      S.syncFp = fp;
+      S.syncWrites = (S.syncWrites || 0) + 1;
+    }
+    S.sync.at = Date.now();
+    S.syncing = false; persist(); render();
+    if(!quiet) toast("Synced.");
+    return true;
+  } catch(e){
+    S.syncing = false;
+    paintSync("Offline \u2014 will retry");
+    if(!quiet) toast("Couldn't reach the mailbox.");
+    return false;
+  }
+}
+function paintSync(msg){
+  const el = $("#syncState");
+  if(el) el.textContent = msg;
+}
+function paintSyncRow(){
+  const on = !!(S.sync && S.sync.url && S.sync.key);
+  paintSync(on ? (S.syncing ? "Syncing\u2026" : "Last synced " + syncAgo()) : "Off");
+  const b = $("#syncSetupBtn");
+  if(b) b.textContent = on ? "CHANGE" : "SET UP";
+}
+function syncAgo(){
+  if(!S.sync || !S.sync.at) return "never";
+  const m = Math.round((Date.now() - S.sync.at) / 60000);
+  return m < 1 ? "just now" : m < 60 ? m + "m ago" : Math.round(m/60) + "h ago";
+}
+function setupSync(){
+  const url = window.prompt("Mailbox URL", (S.sync && S.sync.url) || "");
+  if(url === null) return;
+  const key = window.prompt("Your key \u2014 the same on every device", (S.sync && S.sync.key) || "");
+  if(key === null) return;
+  S.sync = { url:String(url).trim(), key:String(key).trim(), at:0 };
+  persist(); render();
+  if(S.sync.url && S.sync.key) syncNow();
 }
 
 function renderDayView(el){
@@ -3962,7 +4152,7 @@ function paintAccent(){
 function mountAccent(){ /* the wheel is delegated like everything else */ }
 function render(){
   renderPlate(); renderTabs(); renderLede(); renderNotes(); renderFolders(); renderLegend(); renderLayer();
-  paintAccent(); mountAccent(); mountWins();
+  paintAccent(); mountAccent(); mountWins(); paintSyncRow();
   /* the RIGHT NOW card reads the clock, so keep it honest */
   if(!window.__nowTick) window.__nowTick = setInterval(() => {
     if(document.hidden) return;
@@ -4765,7 +4955,8 @@ function storageProbe(){
 function snapshot(){
   return { v:2, saved:new Date().toISOString(), projects:S.projects, notes:S.notes,
            gravity:S.gravity, view:S.view, open:S.open, rows:S.rows, clips:S.clips, resumes:S.resumes,
-           cats:S.cats, states:S.states, groupBy:S.groupBy, wallName:S.wallName, doneSort:S.doneSort, habits:S.habits, day:S.day, chals:S.chals, accent:S.accent,
+           cats:S.cats, states:S.states, groupBy:S.groupBy, wallName:S.wallName, doneSort:S.doneSort,
+           sync:S.sync, mt:S.mt, tomb:S.tomb, habits:S.habits, day:S.day, chals:S.chals, accent:S.accent,
            log:S.log, parts:S.parts, events:S.events,
            swapOff:S.swapOff, lift:S.lift, wins:S.wins };
 }
@@ -4812,6 +5003,11 @@ function adopt(data){
   S.groupBy = ["section","all"].includes(data.groupBy) ? data.groupBy : "state";
   S.wallName = String(data.wallName || "Your Wall").slice(0,24) || "Your Wall";
   S.doneSort = data.doneSort === "top" ? "top" : "last";
+  S.sync = (data.sync && typeof data.sync === "object")
+    ? { url:String(data.sync.url || ""), key:String(data.sync.key || ""), at:+data.sync.at || 0 }
+    : { url:"", key:"", at:0 };
+  S.mt   = (data.mt   && typeof data.mt   === "object") ? data.mt   : {};
+  S.tomb = (data.tomb && typeof data.tomb === "object") ? data.tomb : {};
   S.projects = data.projects.filter(p=>p && p.id && p.name).map(normalize);
   S.open = Object.assign({}, S.open, data.open||{});
   S.rows = data.rows||{}; S.clips = data.clips||{}; S.resumes = data.resumes||{};
@@ -5251,17 +5447,19 @@ document.addEventListener("click", e => {
     const f = $("#notesList"); if(f) f.scrollIntoView({ block:"start", behavior:"smooth" });
   }
   if(act==="opennotes"){ S.view = "notes"; render(); }
-  if(act==="accent"){ S.accent = el.dataset.c; render(); }
+  if(act==="accent"){ S.accent = el.dataset.c; render();  S.mt["settings"] = Date.now(); }
   if(act==="accentwheel"){ S.wheelOpen = !S.wheelOpen; render(); }
+  if(act==="syncnow"){ syncNow(); }
+  if(act==="syncsetup"){ setupSync(); }
   if(act==="export"){ exportBackup(); }
   if(act==="import"){ $("#importFile").click(); }
   if(act==="reset"){ clearDrawer(); }
   if(act==="clearnotes"){ clearNotes(); }
-  if(act==="donesort"){ S.doneSort = S.doneSort === "top" ? "last" : "top"; render(); }
+  if(act==="donesort"){ S.doneSort = S.doneSort === "top" ? "last" : "top"; render();  S.mt["settings"] = Date.now(); }
   if(act==="wallrename"){
     const t = window.prompt("Call it what you want", S.wallName || "Your Wall");
-    if(t !== null){ S.wallName = String(t).trim().slice(0,24) || "Your Wall"; render(); } }
-  if(act==="groupby"){ S.groupBy = ["section","all"].includes(el.dataset.v) ? el.dataset.v : "state"; render(); }
+    if(t !== null){ S.wallName = String(t).trim().slice(0,24) || "Your Wall"; S.mt["settings"] = Date.now(); render(); } }
+  if(act==="groupby"){ S.groupBy = ["section","all"].includes(el.dataset.v) ? el.dataset.v : "state"; render();  S.mt["settings"] = Date.now(); }
   if(act==="copyread"){
     const text = linesFor(el.dataset.scope).join(" ");
     if(navigator.clipboard) navigator.clipboard.writeText(text).then(
@@ -5363,6 +5561,14 @@ if(window.visualViewport){
 
 
 restore();
+/* sync on open, when you come back to the tab, and every two minutes */
+(function autoSync(){
+  const go = () => { if(S.sync && S.sync.url && S.sync.key && navigator.onLine !== false) syncNow(true); };
+  setTimeout(go, 900);
+  document.addEventListener("visibilitychange", () => { if(!document.hidden) go(); });
+  window.addEventListener("online", go);
+  setInterval(go, 120000);
+})();
 scanDues();
 render();
 </script>
