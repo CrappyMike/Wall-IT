@@ -519,7 +519,10 @@ button.tb-cell b{color:#D63B32}
 .stdot2{display:inline-flex;align-items:center;gap:6px;background:none !important}
 .stdot2 i{width:8px;height:8px;border-radius:50%;display:block}
 .stdot2.on{border-width:1.5px}
-.notelink{background:#FFFDF7;border:1px solid #A89F87;border-radius:0;color:#2C6E9E}
+.notelink{background:var(--accent);border:none;border-radius:0;color:var(--accent-ink);
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:3px 8px 2px;
+  white-space:nowrap;display:inline-block;vertical-align:1px}
+.notelink:hover{opacity:.85}
 .notegroup{color:var(--ink)}
 .ngpm{color:#8C8270;font-size:12px;width:11px}
 .ngcount{border:1px solid var(--rule2);background:#F6F1E7;padding:2px 9px;font-size:11px;color:#D63B32;font-weight:700;border-radius:7px}
@@ -1439,6 +1442,52 @@ body.kbup .modal.throw .th-sub{display:none}
 .syncl{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:#8C8878;text-transform:uppercase}
 .syncl span{display:block;color:#C9C4B4;letter-spacing:.1em;font-size:8.5px;margin-top:3px;text-transform:none}
 .syncr{display:flex;gap:6px;flex:none}
+
+.oring{cursor:pointer}
+.osort{display:flex;align-items:center;gap:5px;overflow-x:auto;padding:8px 10px 9px;
+  background:var(--card);border-bottom:1px solid var(--rule);scrollbar-width:none}
+.osort::-webkit-scrollbar{display:none}
+.osort span{font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--ink3);flex:none}
+.osort button{flex:0 0 auto;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;
+  border:1px solid var(--rule);background:var(--paper);color:var(--ink2);min-height:32px;
+  padding:0 9px;text-transform:uppercase}
+.osort button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+
+.oall{display:block;width:100%;margin:8px 0 2px;background:var(--card);border:1px solid var(--ink);
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--ink);
+  min-height:44px;text-transform:uppercase}
+.osub{line-height:1.5}
+
+/* didn't-do-it is its own state, not a blank */
+.dhit{padding-right:100px}
+.dmiss{width:30px;min-height:46px;color:var(--ink3);font-size:11px;background:none;border:none;flex:none}
+.dmiss.on{color:var(--red);font-weight:700}
+.drow.done .dmiss{display:none}
+.drow.miss{background:#F1EEE8;border-color:var(--rule)}
+.drow.miss .dt{color:var(--ink3);text-decoration:line-through;text-decoration-color:#BDB8B0}
+.drow.miss .dv{display:none}
+.dmisslab{font-family:var(--mono);font-size:7px;letter-spacing:.14em;border:1px solid var(--ink3);
+  color:var(--ink3);padding:2px 4px 1px;flex:none}
+.drow.miss.slip{background:#F1F6F1;border-color:#CADFCE}
+.drow.miss.slip .dt{color:var(--green,#2E7D4F);text-decoration:none}
+.drow.miss.slip .dmisslab{border-color:#2E7D4F;color:#2E7D4F}
+
+/* did it / didn't do it */
+.dpair{display:flex;gap:5px;margin:9px 11px 10px}
+.dpair button{flex:1;min-height:44px;border:1px solid var(--rule);background:var(--paper);
+  font-family:var(--disp);font-size:13.5px;letter-spacing:.12em;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.dpair i{font-style:normal;font-size:14px;line-height:1}
+.dpair .dyes{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.dpair .dno{border-color:#E2CFCB;color:var(--red);background:var(--paper)}
+.dpair .dyes.bad{background:var(--paper);border-color:#E2CFCB;color:var(--red)}
+.dpair .dno.good{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.drow.slip .dpair .dno.good i{color:inherit}
+/* the sort toggle reads as something you've set */
+.sortb{display:flex;align-items:center;gap:7px;background:var(--accent);border:1.5px solid var(--accent);
+  color:var(--accent-ink);font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;
+  font-weight:700;min-height:36px;padding:0 12px;text-transform:uppercase}
+.sortb span{font-size:12px;line-height:1}
 </style>
 </head>
 <body>
@@ -1677,14 +1726,14 @@ function editCat(id){
   render();
 }
 const CAT_GUESS = [
-  ["car", /\b(car|vw|oil|ez ?pass|geico|auto|windshield|wiper|tag#)\b/i],
+  ["car", /\b(car|van|truck|vw|oil|ez ?pass|geico|auto|windshield|wiper|tag#|registration|dmv|inspection|tires?|brakes?|mileage|gas)\b/i],
   ["health", /\b(gym|retainer|drink|garlic|apitherapy|acupunctur|pilates|dentist|chiropract|glasses|walk|weigh)\b/i],
   ["media", /\b(video|audible|book|movie|classroom|skool|course|tiktok|podcast|screenplay)\b/i],
-  ["family", /\b(caden|jamie|gray|crib|family|dad|poa|trust|will|memorial|corrado)\b/i],
-  ["money", /\b(tax|refinanc|loan|account|domain|grievance|insurance|\$)\b/i],
+  ["family", /\b(caden\w*|jamie|gray|crib|family|dad|poa|trust|will|memorial|corrado|school|kids?)\b/i],
+  ["money", /(\b(tax\w*|refinanc\w*|mortgage|loan|account|domain|grievance|insurance|budget|bill)\b|\$\d)/i],
   ["house", /\b(roof|floor|lawn|garden|fridge|paint|tree|fence|aerator|dethatch|weeds?|bush|hydrangea|climbing|doors?|trim|subfloor|cushions?|algae|coffee|ring cam|storage|vent|plumb\w*|sink|toilet|boiler|hvac|leak\w*|gutter|driveway|deck|shed)\b/i],
   ["ideas", /\b(brotator|app|ai|idea|design|hats?|invent)\b/i],
-  ["work", /\b(bid|takeoff|estimat\w*|job ?site|submittal|invoice|subcontract\w*|punch ?list|gc|change ?order|vinyl|carpet|tile|glue|seam)\b/i]
+  ["work", /\b(bid|takeoff|estimat\w*|job ?site|submittal|invoice|subcontract\w*|punch ?list|gc|change ?order|vinyl|carpet|tile|glue|seam|transition|strips?|underlayment|baseboard|thresholds?)\b/i]
 ];
 function guessCat(text){
   for(const [c,rx] of CAT_GUESS){ if(rx.test(text) && CAT[c]) return c; }
@@ -1709,6 +1758,7 @@ const S = {
   sync: { url:"", key:"", at:0 }, mt: {}, tomb: {}, syncing: false, syncFp: "", syncWrites: 0,
   doneSort: "last",        // finished things sink by default
   groupBy: "state",        // the notes list groups by state or by life section
+  orbitSort: "priority",
   wheelOpen: false,
   projects: [],            // starts empty — you file your own
   notes: [],               // personal notes: one line + a status stamp
@@ -1720,7 +1770,7 @@ const S = {
   captureTarget: null, logTarget: null, noteEdit: null, noteEditText: null, orbitFocus: null,
   noteFilter: null, noteQuery: "", catFilter: null, gravity: "status", view: "notes",
   pendingNote: null, showFilter: false, sweepQ: [], sweepI: 0, sweepT: null,
-  habits: [], day: {}, chals: [], dayCursor: null, dayPane: "list", draft: null, numEdit: null,
+  habits: [], day: {}, miss: {}, chals: [], dayCursor: null, dayPane: "list", draft: null, numEdit: null,
   accent: "#111111",
   log: {}, parts: [], events: {}, addPart: null,
   swapOff: [], padOpen: null, foodPick: null, swap: null,
@@ -2096,7 +2146,7 @@ function fileSlip(p){
 function linkify(text){
   return esc(text).replace(/https?:\/\/[^\s<]+/g, (u) => {
     let host = u.replace(/^https?:\/\//,"").replace(/^www\./,"").split(/[\/?#]/)[0];
-    return `<a class="notelink" href="${u}" target="_blank" rel="noreferrer">${host} \u2197</a>`;
+    return `<a class="notelink" href="${u}" target="_blank" rel="noreferrer">${host}</a>`;
   });
 }
 
@@ -2516,14 +2566,52 @@ function pullOf(n){
   return Math.max(1, Math.round(base * age * t));
 }
 
+const ORBIT_SORTS = [["priority","Priority"],["new","Newest"],["old","Oldest"],
+                     ["due","Due date"],["cat","Section"],["az","A\u2013Z"]];
+function orbitSorted(list){
+  const k = S.orbitSort || "priority";
+  const arr = [...list];
+  if(k === "new")  return arr.sort((a,b) => (b.date||"").localeCompare(a.date||""));
+  if(k === "old")  return arr.sort((a,b) => (a.date||"").localeCompare(b.date||""));
+  if(k === "az")   return arr.sort((a,b) => a.text.toLowerCase().localeCompare(b.text.toLowerCase()));
+  if(k === "cat")  return arr.sort((a,b) => CAT_ORDER.indexOf(a.cat) - CAT_ORDER.indexOf(b.cat));
+  if(k === "due")  return arr.sort((a,b) => {
+    const ad = a.due || "9999", bd = b.due || "9999";
+    return ad === bd ? 0 : ad < bd ? -1 : 1;
+  });
+  return arr.sort((a,b) => {   /* priority: state rank, then weight */
+    const ra = NOTE_ORDER.indexOf(a.status), rb = NOTE_ORDER.indexOf(b.status);
+    return ra !== rb ? ra - rb : pullOf(b) - pullOf(a);
+  });
+}
+function orbitSortBar(){
+  return `<div class="osort"><span>SORT</span>${ORBIT_SORTS.map(([k,l]) =>
+    `<button class="${(S.orbitSort||"priority")===k?"on":""}" data-act="orbitsort" data-k="${k}">${l}</button>`).join("")}</div>`;
+}
 function orbitPrint(){
   const SIZE = 370, C0 = 185, CY = 172, gold = 2.399963;
   const notes = S.notes.filter(n => !S.catFilter || n.cat === S.catFilter);
-  const BANDP = { pulling:[34,60], radar:[70,96], drifting:[104,130],
-    someday:[136,154], outer:[152,166], done:[152,166] };
+  /* one band per live state, innermost = heaviest */
+  const LIVE = NOTE_ORDER.filter(k => k !== "done");
+  const R0 = 34, R1 = 166, GAP = 6;
+  const W = (R1 - R0 - GAP * (LIVE.length - 1)) / LIVE.length;
+  const BANDP = {};
+  LIVE.forEach((k, i) => { BANDP[k] = [R0 + i*(W+GAP), R0 + i*(W+GAP) + W]; });
+  BANDP.done = [R1 - W, R1];
+  const bandMid = (k) => { const b = BANDP[k] || BANDP.done; return (b[0]+b[1])/2; };
   let rings = "";
-  [[52,1.2,""],[92,1,""],[128,.9,""],[158,.9,'stroke-dasharray="3 5"']].forEach(r =>
-    rings += `<circle cx="${C0}" cy="${CY}" r="${r[0]}" fill="none" stroke="#111111" stroke-width="${r[1]}" ${r[2]}/>`);
+  LIVE.forEach(k => {
+    const st = NOTE_STATUS[k]; if(!st) return;
+    const on = S.orbitFocus === k;
+    const r = bandMid(k);
+    /* a fat transparent stroke makes the whole band tappable */
+    rings += `<circle cx="${C0}" cy="${CY}" r="${r.toFixed(1)}" fill="none"
+        stroke="${on ? st.hex : "#111111"}" stroke-width="${on ? 2.6 : 0.9}"
+        opacity="${on ? 1 : .45}"/>
+      <circle class="oring" cx="${C0}" cy="${CY}" r="${r.toFixed(1)}" fill="none"
+        stroke="transparent" stroke-width="${(W+GAP).toFixed(1)}"
+        data-act="orbitfocus" data-status="${k}"/>`;
+  });
   // engineering ticks on the outer ring + registration marks in the corners
   for(let t = 0; t < 12; t++){
     const ta = t * Math.PI/6;
@@ -2537,23 +2625,15 @@ function orbitPrint(){
       <circle cx="${pt[0]}" cy="${pt[1]}" r="3.4" fill="none"/></g>`;
   });
   let wedges = "", nodes = "", labels = "";
-  const pri = notes.filter(n => n.status === "priority").length;
-  let labelBudget = notes.length <= 20 ? 14 : (pri > 10 ? 6 : 10);
   const put = (n, x, y) => {
-    const dotR = n.status === "priority" ? 6.5 : (n.status === "idea" || n.status === "done") ? 5 : 5.5;
+    const st = NOTE_STATUS[n.status] || NOTE_STATUS[NOTE_ORDER[0]];
+    const rank = NOTE_ORDER.indexOf(n.status);
+    const dotR = rank === 0 ? 6.5 : rank < 3 ? 5.8 : 5;
     const dim = S.orbitFocus && S.orbitFocus !== n.status;
-    nodes += `<g class="orbit-node" data-act="notetoast" data-id="${n.id}" opacity="${dim?.15:1}">
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" fill="transparent"/>
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${NOTE_STATUS[n.status].hex}"
+    nodes += `<g class="orbit-node" data-act="notetoast" data-id="${n.id}" opacity="${dim?.18:1}">
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="transparent"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${st ? st.hex : "#6E6656"}"
         ${n.status==="done"?'opacity=".4"':""} stroke="#F8F5EF" stroke-width="1"/></g>`;
-    const wantLabel = (n.status === "priority" || notes.length <= 20) && labelBudget > 0 && !dim;
-    if(wantLabel){
-      labelBudget--;
-      const right = x >= C0;
-      const short = n.text.length > 13 ? n.text.slice(0,12)+"\u2026" : n.text;
-      labels += `<text x="${(x + (right?10:-10)).toFixed(1)}" y="${(y+3).toFixed(1)}"
-        text-anchor="${right?"start":"end"}" style="font-family:var(--mono);font-size:7.6px" fill="#111111">${esc(short.toLowerCase())}</text>`;
-    }
   };
   if(S.gravity === "age"){
     notes.forEach((n,i) => {
@@ -2570,8 +2650,25 @@ function orbitPrint(){
       const mid = a0 + span/2;
       wedges += `<line x1="${C0}" y1="${CY}" x2="${(C0+Math.cos(a0)*160).toFixed(1)}" y2="${(CY+Math.sin(a0)*160).toFixed(1)}"
         stroke="#111111" stroke-width="1" opacity=".5"/>
-        <text x="${(C0+Math.cos(mid)*169).toFixed(1)}" y="${(CY+Math.sin(mid)*169).toFixed(1)}" text-anchor="middle"
-        style="font-family:var(--mono);font-size:7.6px;letter-spacing:.14em" fill="#6E6656">${CAT[c].label}</text>`;
+        ${(() => {
+          const lx = C0 + Math.cos(mid) * 176, ly = CY + Math.sin(mid) * 176;
+          const cx = Math.cos(mid);
+          /* anchor by which side it sits on, so nothing runs past the edge */
+          const anc = cx > 0.30 ? "start" : cx < -0.30 ? "end" : "middle";
+          const dim = S.orbitFocus ? .35 : 1;
+          const col = (CAT[c] && CAT[c].hex) || "#6E6656";
+          /* a centred label has nowhere beside it for the dot — put it above */
+          const dx = anc === "start" ? -7 : anc === "end" ? 7 : 0;
+          const dy = anc === "middle" ? -20 : -3.5;
+          return `<circle cx="${(lx + dx).toFixed(1)}" cy="${(ly + dy).toFixed(1)}"
+              r="3.2" fill="${col}" opacity="${dim}"/>
+            <text x="${lx.toFixed(1)}" y="${(ly).toFixed(1)}" text-anchor="${anc}" opacity="${dim}"
+              style="font-family:var(--disp);font-size:11.5px;font-weight:600;letter-spacing:.1em"
+              fill="${col}">${esc(CAT[c].label)}</text>
+            <text x="${lx.toFixed(1)}" y="${(ly + 10).toFixed(1)}" text-anchor="${anc}" opacity="${dim}"
+              style="font-family:var(--mono);font-size:8px;letter-spacing:.12em"
+              fill="#8A867E">${list.length}</text>`;
+        })()}`;
       list.forEach((n,i) => {
         const band = BANDP[n.status] || [152,166];
         const R = band[0] + ((i*7)%11)/11 * (band[1]-band[0]);
@@ -2636,41 +2733,36 @@ function orbitPrint(){
   return `<div class="pmap">
     <div class="ohead">
       <div><div class="ptitle" style="padding:0">ORBIT</div>
-      <div class="osub">A MAP OF YOUR HEAD.<br>${notes.length} THINGS ARE REVOLVING AROUND YOU.</div></div>
-      <span class="pdim">${TODAY.toLocaleDateString("en-US",{month:"short",day:"numeric"}).toUpperCase()}</span>
+      <div class="osub">ORBIT MAPPING.<br>${notes.length} THING${notes.length===1?"":"S"} REVOLVING AROUND YOU,
+        HELD BY THEIR GRAVITY TO YOUR PRIORITIES.</div></div>
     </div>
     <div class="prule"></div><div class="prule thin"></div>
     <div class="pgrav">${modes.map(([k,l]) =>
       `<button class="${S.gravity===k?"on":""}" data-act="setgravity" data-g="${k}">${l}</button>`).join("")}</div>
-    <svg viewBox="0 0 ${SIZE} 344" class="pmapsvg">
+    <svg viewBox="-54 -14 ${SIZE + 108} 386" class="pmapsvg">
       ${rings}${wedges}
       <circle cx="${C0}" cy="${CY}" r="16" fill="#D63B32"/>
       <text x="${C0}" y="${CY+3}" text-anchor="middle" style="font-family:var(--mono);font-size:7px;letter-spacing:.2em" fill="#F8F5EF">YOU</text>
-      ${nodes}${labels}</svg>
-    <div class="pcap">CLOSER = HEAVIER \u00b7 TAP A TIER TO OPEN ITS BAND</div>
+      ${nodes}</svg>
+    ${S.orbitFocus && NOTE_STATUS[S.orbitFocus]
+      ? `<button class="oall" data-act="orbitall">\u2190 SHOW EVERYTHING</button>`
+      : `<div class="pcap">CLOSER = HEAVIER \u00b7 TAP A RING TO OPEN IT</div>`}
     ${(() => {
       if(!S.orbitFocus || !NOTE_STATUS[S.orbitFocus]) return "";
       const st = NOTE_STATUS[S.orbitFocus];
-      const band = live.filter(n => n.status === S.orbitFocus)
-        .sort((a,b) => pullOf(b) - pullOf(a));
+      const band = orbitSorted(live.filter(n => n.status === S.orbitFocus));
       return `<div class="oband">
         <div class="ob-head" style="background:${st.hex}">
           <span>\u25CF ${st.label}</span><span class="grow"></span>
           <span>${band.length} ITEM${band.length===1?"":"S"}</span>
           <button data-act="orbitfocus" data-status="${S.orbitFocus}" class="ob-x">\u00d7</button>
         </div>
+        ${orbitSortBar()}
         ${band.length ? band.map(noteRow).join("")
           : `<div class="ob-empty">Nothing in this band. It's either done or it never landed here.</div>`}
       </div>`;
     })()}
     <div class="olegs">${legend}</div>
-    ${hardest ? `<div class="ocard"><label>WHAT'S PULLING HARDEST</label><b>${esc(hardest)}</b></div>` : ""}
-    ${move ? `<div class="ocard red" data-act="notetoast" data-id="${move.id}" role="button">
-      <label>ONE MOVE</label><b>${esc(move.text.replace(/https?:\/\/\S+/g,"").trim())}</b></div>` : ""}
-    <div class="pstrip"><span>${esc(verdict)}</span>
-      <span style="display:flex;gap:14px">
-      <button data-act="read" data-scope="wall" data-label="READ \u25BA">READ \u25BA</button>
-      <button data-act="jumpindex">INDEX \u2193</button></span></div>
   </div>`;
 }
 function legendBar(dark, act, focus){
@@ -2792,10 +2884,10 @@ function renderTabs(){
   $("#viewtabs").innerHTML = `
     <button class="vtab ${S.view==="notes"?"on":""}" data-act="setview" data-view="notes">Notes</button>
     <button class="vtab ${S.view==="day"?"on":""}" data-act="setview" data-view="day">Day</button>
+    <button class="vtab ${S.view==="map"?"on":""}" data-act="setview" data-view="map">Orbit</button>
     <button class="vtab ${S.view==="wins"?"on":""}" data-act="setview" data-view="wins">Wins</button>
     <button class="vtab ${S.view==="lift"?"on":""}" data-act="setview" data-view="lift">Lift${
       liftDayFor(todayStamp()) && !S.lift.done[todayStamp()] ? ` <i class="vdot"></i>` : ""}</button>
-    <button class="vtab ${S.view==="map"?"on":""}" data-act="setview" data-view="map">Orbit</button>
     <button class="vtab ${S.view==="files"?"on":""}" data-act="setview" data-view="files">Projects<span class="vc">${S.projects.length}</span></button>
     <button class="vtab ${S.view==="archive"?"on":""}" data-act="setview" data-view="archive">Archive${arch?`<span class="vc">${arch}</span>`:""}</button>`;
 }
@@ -2818,8 +2910,7 @@ function renderLede(){
   }
   if(S.view === "map"){
     $("#lede").innerHTML = `<div class="lede">
-      <span class="kicker">Orbit \u2014 ${day}</span>
-      <div style="margin:12px 0 4px">${S.notes.length
+      <div style="margin:4px 0">${S.notes.length
         ? orbitPrint()
         : `<div class="folder-empty"><p>Nothing here yet. Add a few notes and the map draws itself.</p></div>`}</div>
     </div>`;
@@ -2958,6 +3049,9 @@ function stepDayCursor(n){
 function tapHabit(id){
   const h = habitBy(id); if(!h) return;
   const iso = dayCur(), v = hval(iso, id);
+  /* a marked row taps back to untouched first, so there's always a way out
+     of a wrong answer without landing on the opposite one */
+  if(isMiss(iso, id)){ clearMiss(iso, id); render(); return; }
   if(h.mode === "count"){ setHab(iso, id, v + 1); }
   else if(h.mode === "num"){
     S.numEdit = S.numEdit === id ? null : id;   /* opens an inline pad, not a browser prompt */
@@ -2986,7 +3080,8 @@ function numCommit(id){
   if(el){ const n = Math.max(0, Math.round(+el.value) || 0); setHab(dayCur(), id, n); }
   S.numEdit = null; render();
 }
-function bumpHabit(id, d){ const iso = dayCur(); setHab(iso, id, Math.max(0, hval(iso, id) + d)); render(); }
+function bumpHabit(id, d){
+  clearMiss(dayCur(), id); const iso = dayCur(); setHab(iso, id, Math.max(0, hval(iso, id) + d)); render(); }
 
 /* ---- challenges: X of N days, never a streak ---- */
 function chalStat(c){
@@ -3214,6 +3309,40 @@ function tplPane(){
     <button class="bigb ghost" data-act="chalnew" style="margin:14px 0 0">BUILD MY OWN</button>
     </section>`;
 }
+function isMiss(iso, id){ return !!(S.miss[iso] && S.miss[iso][id]); }
+function toggleMiss(id){
+  const iso = dayCur();
+  S.miss[iso] = S.miss[iso] || {};
+  if(S.miss[iso][id]) delete S.miss[iso][id];
+  else { S.miss[iso][id] = 1; setHab(iso, id, 0); }
+  if(!Object.keys(S.miss[iso]).length) delete S.miss[iso];
+  stamp("miss", iso);
+  render();
+}
+function clearMiss(iso, id){
+  if(S.miss[iso] && S.miss[iso][id]){
+    delete S.miss[iso][id];
+    if(!Object.keys(S.miss[iso]).length) delete S.miss[iso];
+    stamp("miss", iso);
+  }
+}
+/* a slip is the other way round: doing it is the bad outcome, so the good
+   button is the right-hand one either way */
+function verdictPair(h){
+  const slip = h.kind === "slip";
+  return `<div class="dpair">
+    <button class="dyes${slip ? " bad" : ""}" data-act="hdid" data-id="${h.id}">
+      <i>${slip ? "\u2715" : "\u2713"}</i>DID IT</button>
+    <button class="dno${slip ? " good" : ""}" data-act="hmiss" data-id="${h.id}">
+      <i>${slip ? "\u2713" : "\u2715"}</i>${slip ? "STAYED OFF IT" : "DIDN'T DO IT"}</button>
+  </div>`;
+}
+function didHabit(id){
+  const h = habitBy(id); if(!h) return;
+  clearMiss(dayCur(), id);
+  setHab(dayCur(), id, hitBar(h));   /* straight to the target, however it counts */
+  render();
+}
 function segCount(h){
   if(h.mode === "check") return 1;
   const g = h.goal || 0;
@@ -3227,6 +3356,7 @@ function segBar(fill, total){
 }
 function habitRow(h, iso){
   const v = hval(iso, h.id), goal = hitBar(h), done = v >= goal;
+  const miss = isMiss(iso, h.id);
   const segs = segCount(h);
   const fill = Math.round(Math.min(1, v / goal) * segs);
   const val = h.mode === "check" ? ""
@@ -3235,18 +3365,20 @@ function habitRow(h, iso){
   const minus = (h.mode === "count" && v > 0 && !done)
     ? `<button class="dminus" data-act="hdec" data-id="${h.id}">\u2212</button>` : "";
   const editing = S.numEdit === h.id;
-  return `<div class="drow${done ? " done" : ""}${h.kind === "slip" ? " slip" : ""}" data-hid="${h.id}">
+  return `<div class="drow${done ? " done" : ""}${miss ? " miss" : ""}${h.kind === "slip" ? " slip" : ""}" data-hid="${h.id}">
     <button class="dhit" data-act="htap" data-id="${h.id}">
       <span class="dt">${esc(h.label)}</span>
       ${val ? `<span class="dv">${val}</span>` : ""}
       ${done ? `<span class="dtick">\u2713</span>` : ""}
+      ${miss ? `<span class="dmisslab">${h.kind === "slip" ? "STAYED OFF IT" : "DIDN'T"}</span>` : ""}
     </button>
     <span class="dside">${minus}
       <button class="dgear" data-act="hopen" data-id="${h.id}">\u22ee</button>
       <button class="dgrip" data-grip="${h.id}" aria-label="Drag to reorder">\u2807\u2807</button>
     </span>
     ${editing ? numPad(h, v) : ""}
-    ${done || segs <= 1 ? "" : segBar(fill, segs)}</div>`;
+    ${done || miss || segs <= 1 ? "" : segBar(fill, segs)}
+    ${(done || miss || editing) ? "" : verdictPair(h)}</div>`;
 }
 function eventRow(e){
   return `<div class="drow${e.done ? " done" : ""}">
@@ -3287,6 +3419,7 @@ function soFar(iso){
   const walk  = live.find(h => h.id === "h_dog");
   const food  = logOf(iso).filter(e => e.kind === "eat").length;
   const slips = live.filter(h => h.kind === "slip" && hval(iso, h.id) > 0).length;
+  const missed = live.filter(h => isMiss(iso, h.id)).length;
   const line = (val, label, fill, tot, slip) => `<div class="srow${slip ? " slip" : ""}">
     <b>${val}</b><span>${label}</span><div class="mini">${
       Array.from({length:tot}, (_,i) => `<i class="${i < fill ? "on" : ""}"></i>`).join("")}</div></div>`;
@@ -3298,6 +3431,7 @@ function soFar(iso){
     ${line(String(food), "Food", Math.min(5, food), 5)}
     ${walk ? line(String(hval(iso,walk.id)), "Walks", hval(iso,walk.id), Math.max(2, walk.goal || 2)) : ""}
     ${line(String(slips), "Slips", slips, Math.max(3, S.habits.filter(h => h.kind === "slip").length), true)}
+    ${missed ? line(String(missed), "Missed", missed, Math.max(3, missed)) : ""}
   </div>`;
 }
 function dayStrip(h, endIso){
@@ -3908,6 +4042,7 @@ function mergeState(theirs){
     S[k] = mergeList(S[k] || [], theirs[k], S.mt, S.tomb, tMt, tTomb, k);
   });
   S.day    = mergeByDay(S.day,    theirs.day,    S.mt, tMt, "day");
+  S.miss   = mergeByDay(S.miss,   theirs.miss,   S.mt, tMt, "miss");
   S.log    = mergeByDay(S.log,    theirs.log,    S.mt, tMt, "log");
   S.events = mergeByDay(S.events, theirs.events, S.mt, tMt, "events");
   if(theirs.lift && typeof theirs.lift === "object"){
@@ -4020,7 +4155,7 @@ function renderDayView(el){
   const section = (id, label) => {
     const hs  = habitsIn(id);
     const evs = id === "any" ? [] : eventsOn(iso, id);
-    const items = hs.map(h => ({ done: hval(iso, h.id) >= hitBar(h) && h.kind !== "slip",
+    const items = hs.map(h => ({ done: (hval(iso, h.id) >= hitBar(h) && h.kind !== "slip") || isMiss(iso, h.id),
                                  html: habitRow(h, iso) }))
       .concat(evs.map(e => ({ done: e.done, html: eventRow(e) })));
     if(id === "any") items.push({ done:false, html: foodRow(iso) });
@@ -4054,7 +4189,7 @@ function renderDayView(el){
           const d = S.habits.filter(h => hval(iso,h.id) >= hitBar(h) && h.kind !== "slip").length + evs.filter(e => e.done).length;
           const t = S.habits.filter(h => h.kind !== "slip").length + evs.length;
           return d + " of " + t; })()}</i>
-        <button class="sortb${doneTop ? " on" : ""}" data-act="donesort">DONE ${doneTop ? "TOP" : "LAST"}</button>
+        <button class="sortb" data-act="donesort"><span>${doneTop ? "\u2191" : "\u2193"}</span>COMPLETED ${doneTop ? "TOP" : "BOTTOM"}</button>
       </span></div>
 
     ${partList().map(p => section(p.id, p.label.toUpperCase())).join("")}
@@ -4842,7 +4977,17 @@ function mountThrow(){
     </div>`;
   $("#layer").append(...wrap.childNodes);
   const ta = $("#thText");
+  const paintCat = () => {
+    if(!S.pendingNote || S.pendingNote.catTouched) return;
+    const g = guessCat(ta.value || "");
+    if(g === S.pendingNote.cat) return;
+    S.pendingNote.cat = g;
+    document.querySelectorAll(".th-cats .th-cat").forEach(btn => {
+      btn.classList.toggle("on", btn.dataset.cat === g);
+    });
+  };
   const paintWhen = () => {
+    paintCat();
     const w = parseWhen(ta.value);
     const el2 = $("#thWhen");
     if(el2) el2.textContent = w.due
@@ -4955,9 +5100,9 @@ function storageProbe(){
 function snapshot(){
   return { v:2, saved:new Date().toISOString(), projects:S.projects, notes:S.notes,
            gravity:S.gravity, view:S.view, open:S.open, rows:S.rows, clips:S.clips, resumes:S.resumes,
-           cats:S.cats, states:S.states, groupBy:S.groupBy, wallName:S.wallName, doneSort:S.doneSort,
+           cats:S.cats, states:S.states, groupBy:S.groupBy, wallName:S.wallName, doneSort:S.doneSort, orbitSort:S.orbitSort,
            sync:S.sync, mt:S.mt, tomb:S.tomb, habits:S.habits, day:S.day, chals:S.chals, accent:S.accent,
-           log:S.log, parts:S.parts, events:S.events,
+           log:S.log, miss:S.miss, parts:S.parts, events:S.events,
            swapOff:S.swapOff, lift:S.lift, wins:S.wins };
 }
 let saveTimer = null;
@@ -5001,6 +5146,7 @@ function adopt(data){
                  w:Number.isFinite(+x.w) ? Math.max(0, Math.min(30, +x.w)) : 10 }));
   seedStates();
   S.groupBy = ["section","all"].includes(data.groupBy) ? data.groupBy : "state";
+  S.orbitSort = ORBIT_SORTS.some(x => x[0] === data.orbitSort) ? data.orbitSort : "priority";
   S.wallName = String(data.wallName || "Your Wall").slice(0,24) || "Your Wall";
   S.doneSort = data.doneSort === "top" ? "top" : "last";
   S.sync = (data.sync && typeof data.sync === "object")
@@ -5034,6 +5180,14 @@ function adopt(data){
     .map(w => ({ id:String(w.id), ts:+w.ts || Date.now(),
                  text:String(w.text).slice(0,120), big:!!w.big }))
     .sort((a,b) => a.ts - b.ts);
+  S.miss = {};
+  const rawMiss = (data.miss && typeof data.miss === "object") ? data.miss : {};
+  Object.keys(rawMiss).forEach(k => {
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+    const row = {};
+    Object.keys(rawMiss[k] || {}).forEach(id => { if(rawMiss[k][id]) row[String(id)] = 1; });
+    if(Object.keys(row).length) S.miss[k] = row;
+  });
   S.parts = (Array.isArray(data.parts) ? data.parts : [])
     .filter(x => x && x.id && x.label)
     .map(x => ({ id:String(x.id), label:String(x.label).slice(0,16),
@@ -5353,7 +5507,7 @@ document.addEventListener("click", e => {
   if(act==="evdrop"){ dropEvent(el.dataset.id); }
   if(act==="partnew"){ addPart(); }
   if(act==="partren"){ renamePart(el.dataset.id); }
-  if(act==="pendcatnew"){ const id = addCat(); if(id && S.pendingNote) S.pendingNote.cat = id; render(); }
+  if(act==="pendcatnew"){ const id = addCat(); if(id && S.pendingNote){ S.pendingNote.cat = id; S.pendingNote.catTouched = true; } render(); }
   if(act==="catnew"){ const id = addCat(); if(id){ const n4 = S.notes.find(x => x.id === el.dataset.id); if(n4) n4.cat = id; } render(); }
   if(act==="catedit"){ editCat(el.dataset.cat); }
   if(act==="pendstatenew"){ addState(); render(); }
@@ -5380,6 +5534,8 @@ document.addEventListener("click", e => {
   if(act==="cswapno"){ swapOff(el.dataset.id); }
   if(act==="htap"){ tapHabit(el.dataset.id); }
   if(act==="hdec"){ bumpHabit(el.dataset.id, -1); }
+  if(act==="hmiss"){ toggleMiss(el.dataset.id); }
+  if(act==="hdid"){ didHabit(el.dataset.id); }
   if(act==="numstep"){ const el2 = $("#numIn");
     if(el2){ el2.value = Math.max(0, (Math.round(+el2.value) || 0) + (+el.dataset.d)); el2.focus(); } }
   if(act==="numset"){ const el3 = $("#numIn"); if(el3) el3.value = el.dataset.v; numCommit(el.dataset.id); }
@@ -5439,7 +5595,7 @@ document.addEventListener("click", e => {
   } }
   if(act==="pendcat"){ if(S.pendingNote){
     const ta = $("#thText"); if(ta) S.pendingNote.text = ta.value;
-    S.pendingNote.cat = el.dataset.cat; render(); } }
+    S.pendingNote.cat = el.dataset.cat; S.pendingNote.catTouched = true; render(); } }
   if(act==="pendfile"){ fileThrow(); }
   if(act==="gomap"){ S.view = "map"; window.scrollTo(0,0); render(); }
   if(act==="jumpindex"){
@@ -5456,6 +5612,8 @@ document.addEventListener("click", e => {
   if(act==="reset"){ clearDrawer(); }
   if(act==="clearnotes"){ clearNotes(); }
   if(act==="donesort"){ S.doneSort = S.doneSort === "top" ? "last" : "top"; render();  S.mt["settings"] = Date.now(); }
+  if(act==="orbitsort"){ S.orbitSort = el.dataset.k; render(); }
+  if(act==="orbitall"){ S.orbitFocus = null; render(); }
   if(act==="wallrename"){
     const t = window.prompt("Call it what you want", S.wallName || "Your Wall");
     if(t !== null){ S.wallName = String(t).trim().slice(0,24) || "Your Wall"; S.mt["settings"] = Date.now(); render(); } }
